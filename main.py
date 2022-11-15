@@ -1,4 +1,5 @@
 import random
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,9 +21,6 @@ HALL_OF_FAME_SIZE = 5
 A = 10
 
 hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
-
-RANDOM_SEED = 42
-random.seed(RANDOM_SEED)
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
@@ -58,22 +56,31 @@ def rastrigin(individual):
     return f,
 
 
+def sel_best(population):
+    return tools.selBest(population, 1)[0]
+
+
 toolbox.register("evaluate", rastrigin)
 toolbox.register("select", tools.selRoulette)  # селекция по алгоритму Рулетка
 toolbox.register("mate", tools.cxOnePoint)
 toolbox.register("mutate", tools.mutFlipBit, indpb=1.0 / ONE_MAX_LENGTH)
 
-stats = tools.Statistics(lambda ind: ind.fitness.values)
-stats.register('max', np.max)
-stats.register('avg', np.mean)
+stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
+stats_fit.register('max', np.max)
+stats_fit.register('avg', np.mean)
 
-import time
+stats_best = tools.Statistics(lambda ind: ind)
+stats_best.register('best', sel_best)
+
+mstats = tools.MultiStatistics(fitness=stats_fit, individual=stats_best)
+
+
 def show(ax, xgrid, ygrid, f):
-    ptMins = [[0, 0],]
+    ptMax = [[5, -5], [-5, 5], [5, 5], [-5, -5]]
 
     ax.clear()
     ax.contour(xgrid, ygrid, f)
-    ax.scatter(*zip(*ptMins), marker='X', color='red', zorder=1)
+    ax.scatter(*zip(*ptMax), marker='X', color='red', zorder=1)
     ax.scatter(*zip(*population), color='green', s=2, zorder=0)
 
     plt.draw()
@@ -103,7 +110,7 @@ population, logbook = algelitism.eaSimpleElitism(
     mutpb=P_MUTATION,
     ngen=MAX_GENERATIONS,
     halloffame=hof,
-    stats=stats,
+    stats=mstats,
     callback=(show, (ax, xgrid, ygrid, f_rastrigin)),
     verbose=True
 )
@@ -120,5 +127,5 @@ plt.plot(max_fitness_values, color='red')
 plt.plot(mean_fitness_values, color='green')
 plt.xlabel('Поколение')
 plt.ylabel('Макс/средняя приспособленность')
-plt.title('Зависимость максимальной и средней приспособленности от поколения')
+plt.title('Зависимость макс. и сред. приспособленности от поколения')
 plt.show()
