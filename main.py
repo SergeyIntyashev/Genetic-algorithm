@@ -115,7 +115,7 @@ population, logbook = algelitism.eaSimpleElitism(
     verbose=True
 )
 
-max_fitness_values, mean_fitness_values = logbook.select('max', 'avg')
+max_fitness_values, mean_fitness_values = logbook.chapters['fitness'].select('max', 'avg')
 
 best = hof.items[0]
 print(best)
